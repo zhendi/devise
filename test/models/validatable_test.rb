@@ -23,12 +23,21 @@ class ValidatableTest < ActiveSupport::TestCase
     assert user.valid?
   end
 
+  test "should require uniqueness of email ignoring case" do
+    existing_user = create_user
+
+    user = new_user(:email => existing_user.email.upcase)
+
+    assert !user.valid?
+    assert_equal user.errors[:email], ["has already been taken"]
+  end
+
   test 'should require correct email format if email has changed, allowing blank' do
     user = new_user(:email => '')
     assert user.invalid?
     assert_not_equal 'is invalid', user.errors[:email].join
 
-    %w(invalid_email_format 123 $$$ \(\) ).each do |email|
+    %w(invalid_email_format 123 $$$ \(\) user@foo,com).each do |email|
       user.email = email
       assert user.invalid?, 'should be invalid with email ' << email
       assert_equal 'is invalid', user.errors[:email].join
